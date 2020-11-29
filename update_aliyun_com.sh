@@ -196,8 +196,8 @@ enable_domain() {
 
 # 获取子域名解析记录列表
 describe_domain() {
-	local value type; local ret=0
-	aliyun_transfer "Action=DescribeSubDomainRecords" "SubDomain=${__HOST}.${__DOMAIN}" || write_log 14 "服务器通信失败"
+	local value; local ret=0
+	aliyun_transfer "Action=DescribeSubDomainRecords" "SubDomain=${__HOST}.${__DOMAIN}" "Type=${__TYPE}" || write_log 14 "服务器通信失败"
 	json_cleanup; json_load "$(cat "$DATFILE" 2> /dev/null)" >/dev/null 2>&1
 	json_get_var value "TotalCount"
 	if [ $value -eq 0 ]; then
@@ -213,9 +213,8 @@ describe_domain() {
 		write_log 7 "获得解析记录ID: ${__RECID}"
 		json_get_var value "Status"
 		[ "$value" != "ENABLE" ] && ret=$(( $ret | 2 )) && write_log 7 "解析记录被禁用"
-		json_get_var type "Type"
 		json_get_var value "Value"
-		[ "$type" != "${__TYPE}" -o "$value" != "${__IP}" ] && ret=$(( $ret | 4 )) && write_log 7 "地址或类型需要修改"
+		[ "$value" != "${__IP}" ] && ret=$(( $ret | 4 )) && write_log 7 "地址或类型需要修改"
 	fi
 	return $ret
 }
